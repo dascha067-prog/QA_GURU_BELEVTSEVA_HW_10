@@ -1,1 +1,199 @@
-# QA_GURU_BELEVTSEVA_HW_10
+# Allure Reports Python
+Allure Reports — фреймворк для формирования отчётов о прохождении авто тестов. 
+Преимущество Allure Reports перед другими фреймворками в том, что он не зависит от языка программирования и его можно подключить к любому окружению.
+
+Для работы с Allure Reports необходимо установить Java. 
+Для этого можно воспользоваться [JDK](https://www.azul.com/downloads/?package=jdk#zulu) или [Oracle JDK](https://www.oracle.com/tr/java/technologies/downloads/).
+
+# Windows:
+
+Для Windows установка JDK производится с помощью установщика. 
+После установки необходимо добавить переменную окружения JAVA_HOME и добавить в PATH путь до папки bin в JDK.
+Или в терминале сразу установить значение переменной окружения:
+```
+setx /m JAVA_HOME "C:\Program Files\Java\jdk-21"
+```
+Чтобы проверить что переменная окружения установлена, в терминале вводим команду ```$Env:JAVA_HOME```. 
+Если всё прошло успешно, то в терминале появится путь до папки с JDK. 
+В переменных средах можно добавить переменную JAVA_HOME для текущего пользователя.
+А также можно проверить установку JDK командой java -version.
+
+#  macOS:
+
+Для macOS установка JDK производится с помощью Homebrew.
+После установки Homebrew вводим в терминале команду brew install openjdk.
+Если brew не установлен, то его можно установить командой:
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+export PATH="/opt/homebrew/bin:$PATH"
+```
+После установки JDK необходимо добавить переменную окружения ```JAVA_HOME``` и добавить в ```PATH``` путь до папки ```bin``` в JDK.
+```
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-21.0.2.jdk/Contents/Home
+export PATH=$JAVA_HOME/bin:$PATH
+
+source ~/.bash_profile
+```
+Чтобы проверить что переменная окружения установлена, в терминале вводим команду ```echo $JAVA_HOME.```
+Если всё прошло успешно, то в терминале появится путь до папки с JDK.
+
+# Как установить Allure Reports
+Allure Reports доступен для Windows, Linux и macOS.
+Установка фреймворка сильно зависит от того, на какой операционной системе работает ваша машина.
+Подробные инструкции по установке можно найти по [ссылке](https://allurereport.org/docs/) или [ссылке](https://qameta.io/blog/allure-report-hands-on/).
+
+* macOS:
+
+На macOS установка производится с помощью [Homebrew](https://brew.sh/), который необходимо отдельно установить.
+После этого вводим в терминале команду brew install allure и система сама установит фреймворк.
+
+* Linux:
+
+На машинах под управлением debian-подобных установка производится подобно macOS.
+Вводим в терминале команду ```brew install allure``` и система сама установит фреймворк.
+Или же можно скачать deb-пакет со старицы релизов проекта на [github](https://github.com/allure-framework/allure2/releases) и установить его:
+```
+wget https://github.com/allure-framework/allure2/releases/download/2.27.0/allure_2.27.0-1_all.deb 
+
+sudo dpkg -i allure_2.27.0-1_all.deb
+```
+* Windows:
+
+Для Windows Allure Reports поставляется в [Scoop](https://scoop.sh/).
+Его необходимо отдельно установить, а затем выполнить в Powershell команду ```scoop install allure.```
+
+#  Как подключить Allure Reports
+ля подключения к проекту Allure Reports необходимо в файл ```requirements.txt ```добавить строку с зависимостями ```allure-pytest```.
+После этого следует нажать кнопку «Install requirements» в PyCharm.
+Далее переходим в проект и создаём файл ```pytest.ini``` в корне проекта и в котором прописываем следующие строки:
+```
+[pytest]
+addopts =
+
+    --alluredir=allure-results
+```
+
+# Как запустить тесты с Allure Reports
+После запуска тестов появится папка ```allure-results.``` В ней будут лежать служебные файлы, которые необходимы для генерации отчётов.
+
+Важно! Папку ```allure-results``` необходимо добавить в ```.gitignore```, чтобы не загружать её в репозиторий. 
+А также данная папка создается в той директории, где запускаются тесты(а именно, если запустили тесты из папки ```tests```, то и папка ```allure-results``` будет создана в папке tests).
+
+Для генерации отчётов в терминале необходимо выполнить команду ```allure serve [directory].```
+Вместо``` [directory] ```следует подставить путь до директории, в которой у нас лежат результаты отчётов, к примеру ```tests/allure-results.```
+
+После этого в браузере откроется подробный отчёт по тестам.
+
+Важно! Локально в аллюр-отчетах прослеживать тренды невозможно, но есть библиотека, которая может помочь с этим - [Allure Trend](https://github.com/aleksandr-kotlyar/local-allure-history-trends-bash). 
+На удаленном сервере тренды просматривать можно.
+
+# Добавляем разметку сценария
+Отчёты тестов получаются достаточно подробными, но в них всё ещё сложно разбираться.
+Для этого необходимо обернуть весь тест в разметку сценария, которая поможет явно отслеживать на каком этапе упал тест.
+
+* Лямбда степы
+
+Разметка сценария в Allure Reports производится с помощью ```with allure.step('Описание то делает шаг').```
+Это позволяет разбить тест на логические части и добавить к нему описание.
+
+Для этого перед каждым ключевым шагом теста следует добавить степ с описанием:
+
+```
+def test_example():
+    with allure.step("Открываем главую страницу GitHub")
+        browser.open("https://github.com")
+        
+    with allure.step("Ищем репозиторий eroshenkoam/allure-example")
+        s(".header-search-input").click()
+        s(".header-search-input").send_keys(repo)
+        s(".header-search-input").submit()
+```
+* Шаги с декоратором @allure.step
+
+Также есть другой способ оформить разметку сценария.
+Для этого каждый осмысленный и завершённый шаг теста мы оформим в виде отдельной функции, а после вызовем каждый шаг в главной функции.
+Такой подход можно назвать некоторым видом Page Object. 
+Также это помогает переиспользовать код.
+
+К примеру:
+```
+def test_decorator_steps():
+    open_main_page()
+    search_for_repository("eroshenkoam/allure-example")
+    go_to_repository("eroshenkoam/allure-example")
+    open_issue_tab()
+    should_see_issue_with_number("#76")
+
+
+@allure.step("Открываем главную страницу")
+def open_main_page():
+    browser.open("https://github.com")
+
+
+@allure.step("Ищем репозиторий {repo}")
+def search_for_repository(repo):
+    s(".header-search-input").click()
+    s(".header-search-input").send_keys(repo)
+    s(".header-search-input").submit()
+
+
+@allure.step("Переходим по ссылке репозитория {repo}")
+def go_to_repository(repo):
+    s(by.link_text(repo)).click()
+
+
+@allure.step("Открываем таб Issues")
+def open_issue_tab():
+    s("#issues-tab").click()
+
+
+@allure.step("Проверяем наличие Issue с номером {number}")
+def should_see_issue_with_number(number):
+    s(by.partial_text(number)).click()
+```
+
+* Добавляем аттачменты
+
+Отчёты можно сопровождать дополнительными материалами и комментариями, которые могут помочь анализировать их состояние.
+
+К примеру:
+```
+def test_attachments():
+    # Текст
+    allure.attach("Text content", name="Text", attachment_type=attachment_type.TEXT)
+
+    # HTML
+    allure.attach("<h1>Hello, world</h1>", name="Html", attachment_type=attachment_type.HTML)
+
+    # JSON
+    allure.attach(json.dumps({"first": 1, "second": 2}), name="Json", attachment_type=attachment_type.JSON)
+```
+* Добавляем лейблы/аннотации
+
+Также тесты можно оформить другой служебной информацией, которая удобно сгруппируется в отчёте Allure:
+```
+def test_no_labels():
+    pass
+
+
+# Первый способ
+def test_dynamic_labels():
+    allure.dynamic.tag("web")
+    allure.dynamic.severity(Severity.BLOCKER)
+    allure.dynamic.feature("Задачи в репозитории")
+    allure.dynamic.story("Неавторизованный пользователь не может создать задачу в репозитории")
+    allure.dynamic.link("https://github.com", name="Testing")
+    pass
+
+
+# Второй способ
+@allure.tag("web")
+@allure.severity(Severity.CRITICAL)
+@allure.label("owner", "eroshenkoam")
+@allure.feature("Задачи в репозитории")
+@allure.story("Авторизованный пользователь может создать задачу в репозитории")
+@allure.link("https://github.com", name="Testing")
+def test_decorator_labels():
+    pass
+```
